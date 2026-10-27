@@ -1,0 +1,39 @@
+name: Scheduled CRM Sync Pipeline
+
+on:
+  schedule:
+    # Se ejecuta todos los días a las 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Disparo manual desde botón en GitHub
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ETL Script
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_USERNAME: ${{ secrets.API_USERNAME }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
+          ORGANIZATION_ID: ${{ secrets.ORGANIZATION_ID }}
+          SPREADSHEET_NAME: ${{ secrets.SPREADSHEET_NAME }}
+          DESTINATION_SHEET_INDEX: ${{ secrets.DESTINATION_SHEET_INDEX }}
+          AUDIT_LOGS_SHEET: ${{ secrets.AUDIT_LOGS_SHEET }}
+          GOOGLE_CREDS_FILE: 'credentials.json'
+        run: |
+          python main.py
